@@ -2,7 +2,7 @@ from django.db import models
 from pyshort.djangoshortcuts.fields import ByteaField
 
 
-class RequestFields(models.Model):
+class RequestBase(models.Model):
     time_received = models.DateTimeField(auto_now_add=True)
     ip = models.GenericIPAddressField()
     useragent = models.TextField(blank=True)
@@ -14,38 +14,26 @@ class RequestFields(models.Model):
         abstract = True
 
 
-class BlockFields(models.Model):
-    # Block identifiers: first object counters
-    counter_restart = models.BigIntegerField()  # App restart counter
-    counter_block = models.BigIntegerField()  # Block counter
-    counter_obj = models.BigIntegerField()  # First object counter
-    time_system = models.BigIntegerField()
-    time_realtime = models.BigIntegerField()
-    time_uptime = models.BigIntegerField()
-
-    class Meta:
-        abstract = True
-
-
-class BadRequest(RequestFields):
-    """Block or status upload was rejected for some reason."""
+class BadRequest(RequestBase):
+    """File or status upload was rejected for some reason."""
     reason = models.CharField(max_length=250)
 
 
-class Block(RequestFields, BlockFields):
-    """Upload of one block of data."""
+class File(RequestBase):
+    """Upload of one file."""
 
+    client_path = models.TextField(blank=False, null=False)
     gzipped_data = ByteaField()
     sha1 = models.CharField(max_length=40)
 
 
-class Status(RequestFields):
-    """Upload of current status: blocks pending update."""
+class Status(RequestBase):
+    """Upload of current status: files pending upload."""
     pass
 
 
-class PendingBlock(BlockFields):
-    """A single block without data, part of a status."""
+class PendingFile(models.Model):
+    """A pending file without data, part of a status."""
     status = models.ForeignKey(Status)
-
+    client_path = models.TextField(blank=False, null=False)
 
