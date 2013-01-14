@@ -22,9 +22,8 @@ class BadRequest(RequestBase):
 class File(RequestBase):
     """Upload of one file."""
 
-    client_path = models.TextField(blank=False, null=False)
-    gzipped_data = ByteaField()
-    sha1 = models.CharField(max_length=40)
+    name = models.TextField(blank=False, null=False)
+    body = ByteaField()
 
 
 class Status(RequestBase):
@@ -35,5 +34,6 @@ class Status(RequestBase):
 class PendingFile(models.Model):
     """A pending file without data, part of a status."""
     status = models.ForeignKey(Status)
-    client_path = models.TextField(blank=False, null=False)
+    name = models.TextField(blank=False, null=False)
+    size = models.BigIntegerField()
 
