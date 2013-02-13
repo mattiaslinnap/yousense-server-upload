@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouSense Upload Dashboard</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/bootstrap.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+{% for app in apps %}
+<h1>{{ app.name }}</h1>
+<p class="lead">{{ app.total_installs }} users have uploaded {{ app.total_bytes|filesizeformat }} in {{ app.total_files }} files, and {{ app.total_statuses }} status reports.</p>
+<table class="table">
+    <tr>
+        <th>Id</th>
+        <th>Last request</th>
+        <th>Uploaded files</th>
+        <th>Uploaded bytes</th>
+        <th>Pending files</th>
+        <th>Pending bytes</th>
+    </tr>
+    {% for install in app.installs %}
+        <tr>
+            <td>{{ install.installid|truncatechars:11 }}</td>
+            <td>{{ install.latest_request|timesince }} ago</td>
+            <td>{{ install.files }}</td>
+            <td>{{ install.bytes|filesizeformat }}</td>
+            <td>{{ install.pending_files }}</td>
+            <td>{{ install.pending_bytes|filesizeformat }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endfor %}
+</div>
+</body>
+</html>

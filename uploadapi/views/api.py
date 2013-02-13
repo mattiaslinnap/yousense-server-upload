@@ -28,6 +28,7 @@ def file2(request, appid, installid):
     # Save data to DB.
     File.objects.create(name=request.META['HTTP_NAME'],
                         body=request.body,
+                        size=len(request.body),
                         **request_base_args(request, appid, installid))
 
     # TODO: Start parsing task in background.

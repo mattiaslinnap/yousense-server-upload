@@ -34,11 +34,19 @@ class BadRequest(RequestBase):
     """File or status upload was rejected for some reason."""
     reason = models.CharField(max_length=250)
 
+    class Meta:
+        index_together = (('appid', 'installid', 'time_received'), )
+        get_latest_by = 'time_received'
 
 class File(RequestBase):
     """Upload of one file."""
     name = models.TextField()
     body = ByteaField()
+    size = models.BigIntegerField()  # For faster total bytes in dashboard.
+
+    class Meta:
+        index_together = (('appid', 'installid', 'time_received'), )
+        get_latest_by = 'time_received'
 
     def __unicode__(self):
         return self.name
@@ -48,6 +56,8 @@ class Status(RequestBase):
     pass
 
     class Meta:
+        index_together = (('appid', 'installid', 'time_received'), )
+        get_latest_by = 'time_received'
         verbose_name_plural = 'statuses'
 
 
