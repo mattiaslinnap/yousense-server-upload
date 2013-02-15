@@ -31,7 +31,6 @@ def file2(request, appid, installid):
                         size=len(request.body),
                         **request_base_args(request, appid, installid))
 
-    # TODO: Start parsing task in background.
     # TODO: log bad requests.
     return HttpResponse('{"success": true}')
 
@@ -50,7 +49,7 @@ def status2(request, appid, installid):
             assert 'size' in filedata
 
     # Save status.
-    # TODO: check transactions.
+    # TODO: check transactions?
     status = Status.objects.create(**request_base_args(request, appid, installid))
     for dirdata in body['dirs']:
         dirname = dirdata['name']
