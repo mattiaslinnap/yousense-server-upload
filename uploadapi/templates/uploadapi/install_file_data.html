@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouSense Upload Dashboard</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+<h3 style="word-wrap: break-word;">{{ file.name }}</h3>
+<p class="lead">Uploaded at {{ file.time_received }}:</p>
+{% for event in events %}
+    <p style="word-wrap: break-word;">{{ event }}</p>
+{% endfor %}
+</div>
+</body>
+</html>

@@ -14,4 +14,6 @@ urlpatterns = patterns('uploadapi.views',
 
     # Dashboard
     url(r'^dashboard/$', 'dashboard.index'),
+    url(r'^dashboard/%s/%s/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'dashboard.install_files'),
+    url(r'^dashboard/%s/%s/(?P<fileid>[0-9]+)/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'dashboard.install_file_data'),
 )

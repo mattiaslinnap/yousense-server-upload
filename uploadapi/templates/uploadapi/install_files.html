@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouSense Upload Dashboard</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/bootstrap.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+<h1>App {{ status.appid }}</h1>
+<h1>User {{ status.installid }}</h1>
+<p class="lead">User has uploaded and {{ total_statuses }} status reports and {{ total_bytes|filesizeformat }} in {{ files|length }} files.</p>
+
+<h2>Latest status report</h2>
+<p class="lead">Received {{ status.time_received|timesince }} ago from client version {{ status.useragent }}.<br>
+Files waiting to be uploaded:</p>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Type</th>
+        <th>Filename</th>
+        <th>Size</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for sfile in status.statusfile_set.all %}
+        <tr>
+            <td>{{ sfile.directory }}</td>
+            <td>{{ sfile.name }}</td>
+            <td style="white-space: nowrap;">{{ sfile.size|filesizeformat }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>All uploaded files</h2>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Filename</th>
+        <th>Size</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for file in files %}
+        <tr>
+            <td><a href="{% url 'uploadapi.views.dashboard.install_file_data' status.appid status.installid file.id %}">{{ file.name }}</a></td>
+            <td>{{ file.size|filesizeformat }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+</body>
+</html>

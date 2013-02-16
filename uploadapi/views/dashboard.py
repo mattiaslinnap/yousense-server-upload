@@ -4,8 +4,9 @@ from future_builtins import *  # ascii, filter, hex, map, oct, zip
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import connection
 from django.db.models import Sum
-from django.shortcuts import render
-from pyshort.strings import printf
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, get_object_or_404
+from pyshort.strings import printf, gunzip
 
 from uploadapi.models import File, Status
 
@@ -43,3 +44,20 @@ def index(request):
     for q in connection.queries:
         printf('{time}sec: {sql}', **q)
     return render(request, 'uploadapi/dashboard.html', {'apps': apps})
+
+
+@staff_member_required
+def install_files(request, appid, installid):
+    try:
+        status = Status.objects.filter(appid=appid, installid=installid).latest()
+    except Status.DoesNotExist:
+        raise Http404('User %s on %s has uploaded no status reports.' % (installid, appid))
+    files = list(File.objects.filter(appid=appid, installid=installid).order_by('-time_received'))
+    return render(request, 'uploadapi/install_files.html', {'status': status, 'files': files})
+
+
+@staff_member_required
+def install_file_data(request, appid, installid, fileid):
+    ufile = get_object_or_404(File, appid=appid, installid=installid, pk=fileid)
+    events = gunzip(ufile.body).split('\0')
+    return render(request, 'uploadapi/install_file_data.html', {'file': ufile, 'events': events})
