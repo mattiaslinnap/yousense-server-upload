@@ -48,12 +48,15 @@ def index(request):
 
 @staff_member_required
 def install_files(request, appid, installid):
-    try:
-        status = Status.objects.filter(appid=appid, installid=installid).latest()
-    except Status.DoesNotExist:
+    total_statuses = Status.objects.filter(appid=appid, installid=installid).count()
+    if not total_statuses:
         raise Http404('User %s on %s has uploaded no status reports.' % (installid, appid))
+    status = Status.objects.filter(appid=appid, installid=installid).latest()
+    total_bytes = File.objects.filter(appid=appid, installid=installid).aggregate(Sum('size'))['size__sum']
+    if not total_bytes:
+        total_bytes = 0
     files = list(File.objects.filter(appid=appid, installid=installid).order_by('-time_received'))
-    return render(request, 'uploadapi/install_files.html', {'status': status, 'files': files})
+    return render(request, 'uploadapi/install_files.html', {'status': status, 'files': files, 'total_statuses': total_statuses, 'total_bytes': total_bytes})
 
 
 @staff_member_required
