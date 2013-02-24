@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from future_builtins import *  # ascii, filter, hex, map, oct, zip
+from collections import defaultdict
 from django.core.management.base import BaseCommand, CommandError
 import ujson
 
@@ -17,7 +18,7 @@ TEMPLATE_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 </kml>
 """
 
-TEMPLATE_STYLE = """    <Style id="style-{installid}">
+TEMPLATE_STYLE = """    <Style id="style-{imei}">
       <LineStyle>
         <color>ff{color}</color>
         <width>4</width>
@@ -26,8 +27,8 @@ TEMPLATE_STYLE = """    <Style id="style-{installid}">
 """
 
 TEMPLATE_PATH = """    <Placemark>
-      <name>{installid}</name>
-      <styleUrl>#style-{installid}</styleUrl>
+      <name>{imei}</name>
+      <styleUrl>#style-{imei}</styleUrl>
       <LineString>
         <tessellate>1</tessellate>
         <altitudeMode>clampToGround</altitudeMode>
@@ -46,27 +47,47 @@ class Command(BaseCommand):
     help = 'Exports all GPS paths in Google Earth .kml format.'
 
     def handle(self, *args, **options):
-        installids = set(File.objects.values_list('installid', flat=True).distinct())
-        styles = [TEMPLATE_STYLE.format(installid=installid, color=COLORS[i]) for (i, installid) in enumerate(installids)]
+        imeifixes = sorted(self.sorted_fixes_by_imei().iteritems())
+        styles = [TEMPLATE_STYLE.format(imei=imei, color=COLORS[i]) for (i, (imei, fixes)) in enumerate(imeifixes)]
         paths = []
-        for installid in installids:
-            gps = self.user_gps(installid)
-            coords = [TEMPLATE_COORD.format(**event) for event in gps]
-            paths.append(TEMPLATE_PATH.format(installid=installid, coords='\n'.join(coords)))
+        for imei, fixes in imeifixes:
+            coords = [TEMPLATE_COORD.format(**gps) for gps in fixes]
+            paths.append(TEMPLATE_PATH.format(imei=imei, coords='\n'.join(coords)))
         self.stdout.write(TEMPLATE_DOCUMENT.format(styles=''.join(styles), paths=''.join(paths)))
 
-    def user_gps(self, installid):
-        gps = []
-        for ufile in File.objects.filter(installid=installid):
-            for event in self.file_events(ufile):
-                if event['tag'] == 'sensor.gps':
-                    gps.append(event['data'])
-        gps.sort(key=lambda d: d['time'])
-        return gps
+    def sorted_fixes_by_imei(self):
+        imeis, userfixes = self.data_maps()
+        imeifixes = defaultdict(list)
+        for userid, fixes in userfixes.iteritems():
+            assert userid in imeis
+            imeifixes[imeis[userid]].extend(fixes)
+        for imei, fixes in imeifixes.iteritems():
+            fixes.sort(key=lambda d: d['time'])
+        return imeifixes
+
+    def data_maps(self):
+        """Returns two dictionaries: userid->IMEI and userid->unsorted GPS fixes."""
+        imeis = {}
+        fixes = defaultdict(list)
+
+        for ufile in File.objects.all():
+            for header, event in self.file_events(ufile):
+                if event['tag'] == 'device.telephony':
+                    imeis[header['data']['userid']] = event['data']['device_id']
+                elif event['tag'] == 'sensor.gps':
+                    fixes[header['data']['userid']].append(event['data'])
+        return imeis, fixes
 
     def file_events(self, ufile):
+        header = None
         for jsonevent in gunzip(ufile.body).split('\0'):
             jsonevent = jsonevent.strip()
             if jsonevent:
-                yield ujson.loads(jsonevent)
+                event = ujson.loads(jsonevent)
+                if header is None:
+                    assert event['tag'] == 'header'  # First event must be header.
+                    header = event
+                else:
+                    assert event['tag'] != 'header'  # Only one header allowed.
+                    yield header, event
 
