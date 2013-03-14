@@ -23,13 +23,18 @@ def index(request):
     installids = list(File.objects.values_list('installid', flat=True).distinct())
     imeimap = defaultdict(list)
     for installid in installids:
-        # Assuming IMEI exists in first file for each.
-        ufiles = File.objects.filter(installid=installid).order_by('time_received')[:1]
-        if ufiles:
-            for event in yield_events(ufiles[0]):
+        # Search for IMEI in files, stop as soon as found
+        found = False
+        for ufile in File.objects.filter(installid=installid).order_by('time_received'):
+            for event in yield_events(ufile):
                 if event['tag'] == 'device.telephony':
                     imei = event['data']['device_id']
                     imeimap[imei].append(installid)
+                    found = True
+                if found:
+                    break
+            if found:
+                break
     return render(request, 'uploadapi/kmz_index.html', {'imeimap': dict(imeimap), 'installids': installids})
 
 
