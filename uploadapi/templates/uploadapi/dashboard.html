@@ -2,12 +2,32 @@
 <html>
 <head>
     <title>YouSense Upload Dashboard</title>
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/css/bootstrap.min.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.0/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/bootstrap.min.js"></script>
+    <style>
+        body {
+            padding-top: 60px;
+        }
+    </style>
 </head>
+<body>
 
 <body>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand">YouSense Uploads</a>
+            <ul class="nav">
+                <li class="active"><a href="{% url 'uploadapi.views.dashboard.index' %}">Dashboard</a></li>
+                <li><a href="{% url 'uploadapi.views.export.index' %}">GPS Export</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
 <div class="container">
 {% for app in apps %}
 <h1>{{ app.name }}</h1>

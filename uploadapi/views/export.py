@@ -1,0 +1,65 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+from future_builtins import *  # ascii, filter, hex, map, oct, zip
+from collections import defaultdict
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse
+from django.shortcuts import render
+import ujson
+
+from uploadapi.models import File, Status
+from uploadapi.views import kml
+from pyshort.strings import gunzip
+
+
+def yield_events(ufile):
+    for jsontext in gunzip(ufile.body).split('\0'):
+        jsontext = jsontext.strip()
+        if jsontext:
+            yield ujson.loads(jsontext)
+
+
+@staff_member_required
+def index(request):
+    installids = list(File.objects.values_list('installid', flat=True).distinct())
+    imeimap = defaultdict(list)
+    for installid in installids:
+        # Assuming IMEI exists in first file for each.
+        ufiles = File.objects.filter(installid=installid).order_by('time_received')[:1]
+        if ufiles:
+            for event in yield_events(ufiles[0]):
+                if event['tag'] == 'device.telephony':
+                    imei = event['data']['device_id']
+                    imeimap[imei].append(installid)
+    return render(request, 'uploadapi/kmz_index.html', {'imeimap': dict(imeimap), 'installids': installids})
+
+
+@staff_member_required
+def kmz(request):
+    try:
+        installids = request.GET.getlist('aid')
+        assert installids
+
+        imei = {}
+        imeifixes = defaultdict(list)
+
+        for installid in installids:
+            for ufile in File.objects.filter(installid=installid).order_by('time_received'):
+                for event in yield_events(ufile):
+                    if event['tag'] == 'device.telephony':
+                        imei[installid] = event['data']['device_id']
+                    elif event['tag'] == 'sensor.gps':
+                        imeifixes[imei[installid]].append(event['data'])
+
+        assert imei
+        if not imeifixes:
+            return render(request, 'uploadapi/kmz_error.html', {'error': 'No GPS data.'}, status=404)
+
+        for fixlist in imeifixes.itervalues():
+            assert fixlist
+            fixlist.sort(key=lambda fix: fix['time'])
+        response = HttpResponse(kml.kmz(imeifixes), content_type='application/vnd.google-earth.kmz')
+        response['Content-Disposition'] = 'attachment; filename="yousense.kmz"'
+        return response
+
+    except (AssertionError, KeyError):
+        return render(request, 'uploadapi/kmz_error.html', status=404)
