@@ -7,6 +7,7 @@ from cStringIO import StringIO
 import random
 import zipfile
 
+from pyshort.iterables import igrouper
 
 TEMPLATE_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -14,7 +15,7 @@ TEMPLATE_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
     <name>YouSense</name>
     <description>YouSense user paths</description>
     {styles}
-    {polylines}
+    {placemarks}
   </Document>
 </kml>
 """
@@ -29,19 +30,23 @@ TEMPLATE_STYLE = """    <Style id="style-{name}">
 """
 
 
-TEMPLATE_POLYLINE = """    <Placemark>
+TEMPLATE_PLACEMARK = """    <Placemark>
       <name>{name}</name>
       <styleUrl>#style-{name}</styleUrl>
-      <LineString>
+      <MultiGeometry>
+        {linestrings}
+      </MultiGeometry>
+    </Placemark>
+"""
+
+TEMPLATE_LINESTRING = """   <LineString>
         <tessellate>1</tessellate>
         <altitudeMode>clampToGround</altitudeMode>
         <coordinates>
         {coords}
         </coordinates>
       </LineString>
-    </Placemark>
 """
-
 
 TEMPLATE_COORD = '          {lng:.5f},{lat:.5f},{altitude:.1f}'
 
@@ -64,11 +69,14 @@ def kml(paths):
     """
     names = sorted(paths)
     styles = [TEMPLATE_STYLE.format(name=name, color=randomcolor()) for (i, name) in enumerate(names)]
-    polylines = []
+    placemarks = []
     for name in names:
-        coords = [TEMPLATE_COORD.format(**fix) for fix in paths[name]]
-        polylines.append(TEMPLATE_POLYLINE.format(name=name, coords='\n'.join(coords)))
-    return TEMPLATE_DOCUMENT.format(styles=''.join(styles), polylines=''.join(polylines))
+        linestrings = []
+        for linefixes in igrouper(paths[name], 10000):
+            coords = [TEMPLATE_COORD.format(**fix) for fix in linefixes]
+            linestrings.append(TEMPLATE_LINESTRING.format(coords='\n'.join(coords)))
+        placemarks.append(TEMPLATE_PLACEMARK.format(name=name, linestrings='\n'.join(linestrings)))
+    return TEMPLATE_DOCUMENT.format(styles=''.join(styles), placemarks=''.join(placemarks))
 
 
 def kmz(paths):
@@ -78,5 +86,5 @@ def kmz(paths):
     """
     buf = StringIO()
     with zipfile.ZipFile(buf, 'w') as zfile:
-        zfile.writestr('yousense.kml', kml(paths).encode('utf-8'))
+        zfile.writestr('yousense.kml', kml(paths).encode('utf-8'), zipfile.ZIP_DEFLATED)
     return buf.getvalue()

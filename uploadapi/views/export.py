@@ -67,4 +67,5 @@ def kmz(request):
         return response
 
     except (AssertionError, KeyError):
+        raise
         return render(request, 'uploadapi/kmz_error.html', status=404)
