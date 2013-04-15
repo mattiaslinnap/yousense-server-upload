@@ -18,5 +18,5 @@ urlpatterns = patterns('uploadapi.views',
     url(r'^dashboard/%s/%s/(?P<fileid>[0-9]+)/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'dashboard.install_file_data'),
 
     url(r'^dashboard/gps/$', 'export.index'),
-    url(r'^dashboard/gps/kmz/$', 'export.kmz'),
+    url(r'^dashboard/gps/kmz/(?P<placemark_name>[0-9a-zA-Z]+)/$', 'export.kmz'),
 )
