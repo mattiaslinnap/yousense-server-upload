@@ -39,30 +39,23 @@ def index(request):
 
 
 @staff_member_required
-def kmz(request):
+def kmz(request, placemark_name):
     try:
         installids = request.GET.getlist('aid')
         assert installids
 
-        imei = {}
-        imeifixes = defaultdict(list)
-
+        fixes = []
         for installid in installids:
             for ufile in File.objects.filter(installid=installid).order_by('time_received'):
                 for event in yield_events(ufile):
-                    if event['tag'] == 'device.telephony':
-                        imei[installid] = event['data']['device_id']
-                    elif event['tag'] == 'sensor.gps':
-                        imeifixes[imei[installid]].append(event['data'])
+                    if event['tag'] == 'sensor.gps':
+                        fixes.append(event['data'])
 
-        assert imei
-        if not imeifixes:
+        if not fixes:
             return render(request, 'uploadapi/kmz_error.html', {'error': 'No GPS data.'}, status=404)
 
-        for fixlist in imeifixes.itervalues():
-            assert fixlist
-            fixlist.sort(key=lambda fix: fix['time'])
-        response = HttpResponse(kml.kmz(imeifixes), content_type='application/vnd.google-earth.kmz')
+        fixes.sort(key=lambda fix: fix['time'])
+        response = HttpResponse(kml.kmz({placemark_name: fixes}), content_type='application/vnd.google-earth.kmz')
         response['Content-Disposition'] = 'attachment; filename="yousense.kmz"'
         return response
 

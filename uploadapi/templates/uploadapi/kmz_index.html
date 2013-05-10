@@ -35,7 +35,7 @@
             <tr>
                 <td>{{ imei }}</td>
                 <td>{{ installids|join:'<br>' }}</td>
-                <td><a class="btn btn-small btn-success" href="{% url 'uploadapi.views.export.kmz' %}?aid={{ installids|join:'&aid=' }}">Export
+                <td><a class="btn btn-small btn-success" href="{% url 'uploadapi.views.export.kmz' imei %}?aid={{ installids|join:'&aid=' }}">Export
                     <i class="icon-download icon-white"></i></a></td>
             </tr>
             {% endfor %}
