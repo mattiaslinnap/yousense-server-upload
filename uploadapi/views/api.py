@@ -11,9 +11,6 @@ from uploadapi.models import File, request_base_args, Status, StatusFile
 
 @csrf_exempt
 def file2(request, appid, installid):
-    return HttpResponse('{"success": false, "error": "Server Maintenance"}', status=503)
-
-
     # TODO: Check client version: recent enough, and appid matches User-Agent.
 
     printf(request.META['HTTP_USER_AGENT'])
@@ -39,7 +36,6 @@ def file2(request, appid, installid):
 
 @csrf_exempt
 def status2(request, appid, installid):
-    return HttpResponse('{"success": false, "error": "Server Maintenance"}', status=503)
     # TODO: Check client version: recent enough, and appid matches User-Agent.
 
     assert len(request.body) > 0
