@@ -13,10 +13,5 @@ urlpatterns = patterns('uploadapi.views',
     url(r'^2/file/%s/%s/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'api.file2'),  # Log file upload.
 
     # Dashboard
-    url(r'^dashboard/$', 'dashboard.index'),
-    url(r'^dashboard/%s/%s/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'dashboard.install_files'),
-    url(r'^dashboard/%s/%s/(?P<fileid>[0-9]+)/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'dashboard.install_file_data'),
-
-    url(r'^dashboard/gps/$', 'export.index'),
-    url(r'^dashboard/gps/kmz/(?P<placemark_name>[0-9a-zA-Z]+)/$', 'export.kmz'),
+    url(r'^dashboard/$', 'new_dashboard'),
 )

@@ -1,1 +1,4 @@
-__author__ = 'ml421'
+from django.shortcuts import redirect
+
+def new_dashboard(request):
+    return redirect('/dashboard/')
