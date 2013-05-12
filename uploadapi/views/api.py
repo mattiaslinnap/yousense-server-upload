@@ -9,6 +9,12 @@ import ujson
 from pyshort.strings import printf
 from uploadapi.models import File, request_base_args, Status, StatusFile
 
+
+@csrf_exempt
+def ping2(request):
+    return HttpResponse('OK')
+
+
 @csrf_exempt
 def file2(request, appid, installid):
     # TODO: Check client version: recent enough, and appid matches User-Agent.

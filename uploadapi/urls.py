@@ -9,6 +9,7 @@ INSTALLID_PATTERN = r'(?P<installid>[0-9a-f]{32})'
 urlpatterns = patterns('uploadapi.views',
 
     # API version 2
+    url(r'^2/ping/', 'api.ping2'),  # Just returns OK.
     url(r'^2/status/%s/%s/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'api.status2'),  # Pending upload files.
     url(r'^2/file/%s/%s/$' % (APPID_PATTERN, INSTALLID_PATTERN), 'api.file2'),  # Log file upload.
 
