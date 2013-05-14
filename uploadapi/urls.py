@@ -4,7 +4,9 @@ from future_builtins import *  # ascii, filter, hex, map, oct, zip
 from django.conf.urls import patterns, url
 
 APPID_PATTERN = r'(?P<appid>[0-9a-zA-Z.]{1,100})'
-INSTALLID_PATTERN = r'(?P<installid>[0-9a-f]{32})'
+INSTALLID_PATTERN = r'(?P<installid>[0-9a-f]{25,32})'
+
+/upload/2/status/org.yousense.tartu/ccfc1a810aaf44aa738bcfdb65f4b32/
 
 urlpatterns = patterns('uploadapi.views',
 
